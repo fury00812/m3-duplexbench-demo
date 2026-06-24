@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>M3-DuplexBench Demo</title>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+  
+    .example-nav {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px 8px;
+    }
+  
+    .example-nav-inner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+  
+    .example-nav a {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.86rem;
+      border: 1px solid var(--line);
+    }
+  
+    .example-nav a:hover {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: var(--accent);
+    }
+  
+    .example {
+      scroll-margin-top: 20px;
+    }
+
+    :root {
+      --bg: #f8f9fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #2563eb;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    header {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 48px 24px 24px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px 64px;
+    }
+
+    .example {
+      margin-top: 32px;
+      padding: 24px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .example-header {
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 16px;
+    }
+
+    .example-title {
+      margin: 0 0 8px;
+      font-size: 1.35rem;
+      letter-spacing: -0.01em;
+    }
+
+    .example-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .model-block {
+      margin-top: 28px;
+    }
+
+    .model-title {
+      margin: 0 0 14px;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .condition-row {
+      display: grid;
+      grid-template-columns: 170px minmax(0, 1fr);
+      gap: 20px;
+      align-items: center;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .condition-row:first-of-type {
+      border-top: none;
+    }
+
+    .condition-label {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .condition-note {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 400;
+    }
+
+    video {
+      display: block;
+      width: 100%;
+      max-height: 180px;
+      background: #111827;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+    }
+
+    footer {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 24px 48px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--line);
+    }
+
+    code {
+      background: #f3f4f6;
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    @media (max-width: 760px) {
+      header {
+        padding-top: 32px;
+      }
+
+      .example {
+        padding: 18px;
+      }
+
+      .condition-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      video {
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>M3-DuplexBench Demo</h1>
+    <p class="subtitle">
+      Examples of M3-DuplexBench.
+    </p>
+  </header>
+
+  <nav class="example-nav" aria-label="Example navigation">
+    <div class="example-nav-inner" id="exampleNav"></div>
+  </nav>
+
+  <main id="demoRoot"></main>
+  
+<!--
+  <footer>
+    Place waveform videos under <code>assets/example*/</code>. File names follow the pattern
+    <code>{model_slug}_{context_slug}.mp4</code>, for example
+    <code>assets/example1/moshi_no_context.mp4</code>.
+  </footer>
+-->
+
+  <script>
+    const conditions = {
+      no_context: {
+        label: "No context",
+        note: "Single-turn input only"
+      },
+      user_context: {
+        label: "User context",
+        note: "Previous user turns only"
+      },
+      full_context: {
+        label: "Full context",
+        note: "Teacher-forced user and system history"
+      }
+    };
+
+    const referenceModel = [
+      { name: "Reference", slug: "reference" }
+    ];
+
+    const englishModels = [
+      ...referenceModel,
+      { name: "Moshi", slug: "moshi" },
+      { name: "PersonaPlex", slug: "personaplex" },
+      { name: "Freeze-Omni", slug: "freeze_omni", unavailableContexts: ["full_context"] }
+    ];
+
+    const japaneseModels = [
+      ...referenceModel,
+      { name: "J-Moshi", slug: "jmoshi" },
+      { name: "LLM-jp-Moshi", slug: "llmjpmoshi" }
+    ];
+
+    const examples = [
+      {
+        id: 1,
+        language: "English",
+        task: "Multi-turn QA",
+        phenomenon: "Smooth Turn Taking",
+        models: englishModels,
+        contexts: ["no_context", "user_context", "full_context"]
+      },
+      {
+        id: 2,
+        language: "Japanese",
+        task: "Multi-turn QA",
+        phenomenon: "Smooth Turn Taking",
+        models: japaneseModels,
+        contexts: ["no_context", "user_context", "full_context"]
+      },
+      {
+        id: 3,
+        language: "English",
+        task: "Multi-turn QA",
+        phenomenon: "User Barge-in",
+        models: englishModels,
+        contexts: ["user_context", "full_context"]
+      },
+      {
+        id: 4,
+        language: "Japanese",
+        task: "Multi-turn QA",
+        phenomenon: "User Barge-in",
+        models: japaneseModels,
+        contexts: ["user_context", "full_context"]
+      },
+      {
+        id: 5,
+        language: "English",
+        task: "Chat",
+        phenomenon: "Smooth Turn Taking",
+        models: englishModels,
+        contexts: ["no_context", "user_context", "full_context"]
+      },
+      {
+        id: 6,
+        language: "Japanese",
+        task: "Chat",
+        phenomenon: "Smooth Turn Taking",
+        models: japaneseModels,
+        contexts: ["no_context", "user_context", "full_context"]
+      },
+      {
+        id: 7,
+        language: "English",
+        task: "Chat",
+        phenomenon: "Pause Handling",
+        models: englishModels,
+        contexts: ["no_context", "user_context", "full_context"]
+      },
+      {
+        id: 8,
+        language: "Japanese",
+        task: "Chat",
+        phenomenon: "Pause Handling",
+        models: japaneseModels,
+        contexts: ["no_context", "user_context", "full_context"]
+      },
+      {
+        id: 9,
+        language: "English",
+        task: "Chat",
+        phenomenon: "User Backchanneling",
+        models: englishModels,
+        contexts: ["user_context", "full_context"]
+      },
+      {
+        id: 10,
+        language: "Japanese",
+        task: "Chat",
+        phenomenon: "User Backchanneling",
+        models: japaneseModels,
+        contexts: ["user_context", "full_context"]
+      },
+      {
+        id: 11,
+        language: "English",
+        task: "Chat",
+        phenomenon: "User Barge-in",
+        models: englishModels,
+        contexts: ["user_context", "full_context"]
+      },
+      {
+        id: 12,
+        language: "Japanese",
+        task: "Chat",
+        phenomenon: "User Barge-in",
+        models: japaneseModels,
+        contexts: ["user_context", "full_context"]
+      }
+    ];
+
+    function createTag(text) {
+      const span = document.createElement("span");
+      span.className = "tag";
+      span.textContent = text;
+      return span;
+    }
+
+    function createVideo(src) {
+      const video = document.createElement("video");
+      video.controls = true;
+      video.preload = "metadata";
+
+      const source = document.createElement("source");
+      source.src = src;
+      source.type = "video/mp4";
+
+      video.appendChild(source);
+      return video;
+    }
+
+    function renderExample(example) {
+      const section = document.createElement("section");
+      section.className = "example";
+      section.id = `example${example.id}`;
+
+      const header = document.createElement("div");
+      header.className = "example-header";
+
+      const title = document.createElement("h2");
+      title.className = "example-title";
+      title.textContent = `Example ${example.id}: ${example.language}, ${example.task}, ${example.phenomenon}`;
+
+      const meta = document.createElement("div");
+      meta.className = "example-meta";
+      meta.appendChild(createTag(example.language));
+      meta.appendChild(createTag(example.task));
+      meta.appendChild(createTag(example.phenomenon));
+
+      header.appendChild(title);
+      header.appendChild(meta);
+      section.appendChild(header);
+
+      for (const model of example.models) {
+        const modelBlock = document.createElement("div");
+        modelBlock.className = "model-block";
+      
+        const modelTitle = document.createElement("h3");
+        modelTitle.className = "model-title";
+        modelTitle.textContent = model.name;
+        modelBlock.appendChild(modelTitle);
+      
+        if (model.slug === "reference") {
+          const row = document.createElement("div");
+          row.className = "condition-row";
+      
+          const label = document.createElement("div");
+          label.className = "condition-label";
+          label.textContent = "Reference";
+      
+          const note = document.createElement("span");
+          note.className = "condition-note";
+          note.textContent = "Ground-truth dialogue audio";
+          label.appendChild(note);
+      
+          const videoPath = `assets/example${example.id}/reference.mp4`;
+      
+          row.appendChild(label);
+          row.appendChild(createVideo(videoPath));
+          modelBlock.appendChild(row);
+      
+          section.appendChild(modelBlock);
+          continue;
+        }
+      
+        for (const contextKey of example.contexts) {
+          if (model.unavailableContexts && model.unavailableContexts.includes(contextKey)) {
+            continue;
+          }
+      
+          const condition = conditions[contextKey];
+      
+          const row = document.createElement("div");
+          row.className = "condition-row";
+      
+          const label = document.createElement("div");
+          label.className = "condition-label";
+          label.textContent = condition.label;
+      
+          const note = document.createElement("span");
+          note.className = "condition-note";
+          note.textContent = condition.note;
+          label.appendChild(note);
+      
+          const videoPath = `assets/example${example.id}/${model.slug}_${contextKey}.mp4`;
+      
+          row.appendChild(label);
+          row.appendChild(createVideo(videoPath));
+          modelBlock.appendChild(row);
+        }
+      
+        section.appendChild(modelBlock);
+      }
+-->
+
+      return section;
+    }
+
+    const root = document.getElementById("demoRoot");
+    const nav = document.getElementById("exampleNav");
+    
+    for (const example of examples) {
+      const link = document.createElement("a");
+      link.href = `#example${example.id}`;
+      link.textContent = `Example ${example.id}: ${example.language}, ${example.task}, ${example.phenomenon}`;
+      nav.appendChild(link);
+    
+      root.appendChild(renderExample(example));
+    }
+  </script>
+</body>
+</html>
